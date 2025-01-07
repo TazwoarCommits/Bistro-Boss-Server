@@ -43,7 +43,7 @@ async function run() {
         // Middleware to verify to token and admin
 
         const verifyTOken = (req , res , next) => {
-            console.log(req.headers.authorization) ; 
+            // console.log(req.headers.authorization) ; 
             if(!req.headers.authorization){
                 return res.status(401).send({message : "Unauthorized Access"});
             }
@@ -134,6 +134,12 @@ async function run() {
             const result = await menuCollection.find().toArray();
             res.send(result)
         });
+
+        app.post("/menu" , async (req , res) => {
+            const menuItem = req.body ;
+            const result = await menuCollection.insertOne(menuItem);
+            res.send(result) ; 
+        }) ;
 
 
 
