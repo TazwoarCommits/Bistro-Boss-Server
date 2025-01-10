@@ -3,8 +3,9 @@ import cors from "cors"
 import 'dotenv/config'
 import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import jwt from 'jsonwebtoken';
+import Stripe from "stripe";
 
-
+const stripe = new Stripe(process.env.STRIPE_SECRET_kEY) ; 
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -206,6 +207,26 @@ async function run() {
             const filter = { _id: new ObjectId(id) };
             const result = await cartsCollection.deleteOne(filter);
             res.send(result);
+        })
+
+
+        // payment related APIs
+
+        app.post("/create-payment-intent" , async (req , res) => {
+            const {price} = req.body ;
+            const amount = parseInt(price*100) ;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount : amount ,
+                currency : "USD",
+                payment_method_types: ["card"] ,
+                automatic_payment_methods: {
+                    enabled: true,
+                  },
+            })
+
+            res.send({
+                clientSecret : paymentIntent.client_secret
+            })
         })
 
         // Send a ping to confirm a successful connection
