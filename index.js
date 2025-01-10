@@ -5,7 +5,7 @@ import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import jwt from 'jsonwebtoken';
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_kEY) ; 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY) ; 
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -214,14 +214,15 @@ async function run() {
 
         app.post("/create-payment-intent" , async (req , res) => {
             const {price} = req.body ;
+            if (!price || isNaN(price) || price <= 0) {
+                return res.status(400).send({ error: "Invalid or missing price. Must be greater than zero." });
+              }
             const amount = parseInt(price*100) ;
+            console.log(amount , "amount Inside the intent")
             const paymentIntent = await stripe.paymentIntents.create({
                 amount : amount ,
-                currency : "USD",
+                currency : "usd",
                 payment_method_types: ["card"] ,
-                automatic_payment_methods: {
-                    enabled: true,
-                  },
             })
 
             res.send({
