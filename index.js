@@ -32,6 +32,7 @@ async function run() {
         const usersCollection = client.db("bistro-boss").collection("users");
         const reviewsCollection = client.db("bistro-boss").collection("reviews");
         const cartsCollection = client.db("bistro-boss").collection("carts");
+        const paymentsCollection = client.db("bistro-boss").collection("payments")
 
         // JWT related APIs
         app.post("/jwt" , async (req , res) => {
@@ -210,7 +211,7 @@ async function run() {
         })
 
 
-        // payment related APIs
+        // payment intent related APIs
 
         app.post("/create-payment-intent" , async (req , res) => {
             const {price} = req.body ;
@@ -228,6 +229,22 @@ async function run() {
             res.send({
                 clientSecret : paymentIntent.client_secret
             })
+        })
+
+        // payment related APIs to send in DB
+
+        app.post("/payments" , async (req , res) => {
+            const newPayment = req.body ;
+            const result = await paymentsCollection.insertOne(newPayment); 
+
+            // carefully delete each item from the cart
+            console.log("payment Info" , newPayment);
+            const query = {_id : {
+                $in : newPayment.cartIds.map(id => new ObjectId(id))
+            }} ; 
+
+            const deleteResult = await cartsCollection.deleteMany(query) ;
+            res.send({result , deleteResult}) ;
         })
 
         // Send a ping to confirm a successful connection
