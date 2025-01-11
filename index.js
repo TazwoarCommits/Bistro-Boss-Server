@@ -233,6 +233,15 @@ async function run() {
 
         // payment related APIs to send in DB
 
+        app.get("/payments/:email" , verifyTOken , async (req , res) => {
+            const filter = {email : req.params.email} ;
+            if(req.params.email !== req.decoded.email){
+              return res.status(403).send( { message : "Forbidden - Access"} )
+            }
+            const result = await paymentsCollection.find(filter).toArray() ;
+            res.send(result) ;
+        })
+
         app.post("/payments" , async (req , res) => {
             const newPayment = req.body ;
             const result = await paymentsCollection.insertOne(newPayment); 
