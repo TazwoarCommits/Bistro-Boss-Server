@@ -256,6 +256,26 @@ async function run() {
             res.send({result , deleteResult}) ;
         })
 
+        // Stats and analytics 
+
+        app.get("/admin-stats" , async(req , res) => {
+            const users = await usersCollection.estimatedDocumentCount();
+            const menuItems = await menuCollection.estimatedDocumentCount() ;
+            const orders = await paymentsCollection.estimatedDocumentCount() ;
+            const payments = await paymentsCollection.find().toArray();
+
+            // this is not the best way
+            const revenue = payments.reduce((accumulator , payment) => accumulator + payment.price ,0) ;
+
+            // const revenue = await paymentsCollection.aggregate([{
+            //     $group{
+
+            //     }
+            // }])
+
+            res.send({users,menuItems ,orders , revenue})
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
