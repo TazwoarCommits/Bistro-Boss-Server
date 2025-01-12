@@ -258,23 +258,30 @@ async function run() {
 
         // Stats and analytics 
 
-        app.get("/admin-stats" , async(req , res) => {
+        app.get("/admin-stats" , verifyTOken , verifyAdmin ,async(req , res) => {
             const users = await usersCollection.estimatedDocumentCount();
             const menuItems = await menuCollection.estimatedDocumentCount() ;
             const orders = await paymentsCollection.estimatedDocumentCount() ;
             const payments = await paymentsCollection.find().toArray();
 
             // this is not the best way
-            const revenue = payments.reduce((accumulator , payment) => accumulator + payment.price ,0) ;
+            // const revenue = payments.reduce((accumulator , payment) => accumulator + payment.price ,0) ;
 
-            // const revenue = await paymentsCollection.aggregate([{
-            //     $group{
+            const result = await paymentsCollection.aggregate([{
+                $group : {
+                    _id : null ,
+                    totalRevenue : {
+                        $sum : "$price"
+                    }
+                }
+            }]).toArray();
 
-            //     }
-            // }])
+            const revenue = result.length > 0 ? result[0].totalRevenue : 0 ;
 
-            res.send({users,menuItems ,orders , revenue})
-        })
+            res.send({users,menuItems ,orders , revenue}) ;
+        }) ;
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
